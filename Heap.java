@@ -11,6 +11,12 @@ public class Heap
     public final boolean lazyMelds;
     public final boolean lazyDecreaseKeys;
     public HeapItem min;
+    private int size = 0;
+    private int numTrees = 0;
+    private int numMarkedNodes = 0;
+    private int totalLinks = 0;
+    private int totalCuts = 0;
+    private int totalHeapifyCosts = 0;
     
     /**
      *
@@ -63,9 +69,88 @@ public class Heap
      * Decrease the key of x by diff and fix the heap.
      * 
      */
-    public void decreaseKey(HeapItem x, int diff) 
-    {    
-        return; // should be replaced by student code
+    public void decreaseKey(HeapItem x, int diff) {    
+        if (x == null || diff < 0) return;        
+        x.key -= diff;
+        HeapNode node = x.node;
+        HeapNode parent = node.parent;
+        if (parent != null && node.item.key < parent.item.key) {
+            if (!lazyDecreaseKeys) {
+                heapifyUp(node);
+            } else {
+                cut(node, parent);
+                cascadingCut(parent);
+            }
+        }
+        if (x.key < min.key) {
+            min = x;
+        }
+    }
+
+    private void heapifyUp(HeapNode node) {
+        while (node.parent != null && node.item.key < node.parent.item.key) {
+            HeapNode parent = node.parent;            
+            swapItemPointers(node, parent);
+            totalHeapifyCosts++; //
+            node = parent;
+        }
+    }
+
+    private void swapItemPointers(HeapNode a, HeapNode b) {
+        HeapItem itemA = a.item;
+        HeapItem itemB = b.item;        
+        a.item = itemB;
+        b.item = itemA;        
+        itemA.node = b;
+        itemB.node = a;
+    }
+
+    private void cut(HeapNode node, HeapNode parent) {
+        node.parent = null;
+        parent.rank--;        
+        if (node.next == node) { 
+            parent.child = null;
+        } else {
+            node.prev.next = node.next;
+            node.next.prev = node.prev;
+            if (parent.child == node) { 
+                parent.child = node.next;
+            }
+        }        
+        node.next = node;
+        node.prev = node;        
+        if (node.marked) {
+            numMarkedNodes--;
+            node.marked = false;
+        }        
+        addToRootList(node);        
+        totalCuts++;
+    }
+
+    private void cascadingCut(HeapNode node) {
+        HeapNode parent = node.parent;
+        if (parent != null) {
+            if (!node.marked) {
+                node.marked = true;
+                numMarkedNodes++;
+            } else {
+                cut(node, parent);
+                cascadingCut(parent);
+            }
+        }
+    }
+
+    private void addToRootList(HeapNode node) {
+        if (min == null) {
+            min = node.item;
+        } else {
+            HeapNode minNode = min.node;
+            node.next = minNode.next;
+            node.prev = minNode;
+            minNode.next.prev = node;
+            minNode.next = node;
+        }
+        numTrees++;
     }
 
     /**
@@ -168,6 +253,13 @@ public class Heap
         public HeapNode prev;
         public HeapNode parent;
         public int rank;
+        public boolean marked;
+        public HeapNode(HeapItem item) {
+            this.item = item;
+            this.next = this;
+            this.prev = this;
+            this.marked = false;
+        }
     }
     
     /**
@@ -178,5 +270,9 @@ public class Heap
         public HeapNode node;
         public int key;
         public String info;
+        public HeapItem(int key, String info) {
+            this.key = key;
+            this.info = info;
+        }
     }
 }
