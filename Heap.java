@@ -101,7 +101,8 @@ public class Heap
             this.min = min_node.next.item;
         }
         this.size --;
-        this.min.node = successiveLinking(this.min.node);
+        successiveLinking(this.min.node);
+
     }
 
 
@@ -118,7 +119,6 @@ public class Heap
         HeapNode node = x.node;
         HeapNode parent = node.parent;
 
-        //TODO - make sure that the heap is okay before, maybe difference even with no decreasekey
         if (parent != null && node.item.key < parent.item.key) {
             if (!lazyDecreaseKeys) {
                 heapifyUp(node);
@@ -155,7 +155,6 @@ public class Heap
         parent.rank--;
         
         //means the only child of the parent - after cut no child
-        //TODO - check if need to do something different if had only one child and it was cut. maybe consider markup
         if (node.next == node) { 
             parent.child = null;
         } else {
@@ -183,7 +182,6 @@ public class Heap
     }
 
     private void cascadingCut(HeapNode node) {
-        //TODO - make sure functionality is good - in class no other cut, only cascading, and the cut is done in the beggining of the func
         HeapNode parent = node.parent;
         if (parent != null) {
             if (!node.marked) {
@@ -244,7 +242,10 @@ public class Heap
      */
     private HeapNode successiveLinking(HeapNode x) {
         if (x==null) return null;
-        HeapNode[] buckets =  new HeapNode[(int)(Math.log(Math.max(2, this.size)) / Math.log(2) + 5)];
+        //HeapNode[] buckets =  new HeapNode[(int)(2*Math.log(Math.max(2, this.size)) / Math.log(2))];
+        HeapNode[] buckets =  new HeapNode[100];
+
+
         to_buckets(buckets, x);
         return from_buckets(buckets);
     }
@@ -326,6 +327,8 @@ public class Heap
         }
 
         y.parent = x;
+        y.marked = false;
+
         if (x.child == null){
             x.child = y;
             y.next = y;
@@ -369,7 +372,6 @@ public class Heap
     {
         addHeapToRootList(heap2);
 
-        //TODO - make sure all these need to be simply added and not differently
         update_parameters(heap2);
         
         if (!this.lazyMelds){
@@ -464,7 +466,6 @@ public class Heap
         public HeapNode prev;
         public HeapNode parent;
         public int rank;
-        //TODO - make sure rank is updated when needed
         public boolean marked;
 
         public HeapNode(HeapItem item) {
